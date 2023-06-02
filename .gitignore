@@ -1,0 +1,9 @@
+.vscode/settings.json
+__pycache__/main.cpython-310.pyc
+dataloader/__pycache__/__init__.cpython-39.pyc
+models/__pycache__/basemodel.cpython-39.pyc
+models/__pycache__/basemodel.cpython-310.pyc
+models/__pycache__/basemodel.cpython-311.pyc
+dataloader/__pycache__/__init__.cpython-310.pyc
+dataloader/__pycache__/pinwheel.cpython-39.pyc
+dataloader/__pycache__/pinwheel.cpython-310.pyc
