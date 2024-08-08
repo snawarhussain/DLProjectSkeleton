@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 import logging
-
+from utils.aux_func import ProjectConfig
 # Initialize the logger
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -25,13 +25,13 @@ class BaseModel(nn.Module):
     Args:
         nn (_type_): _description_
     """
-    def __init__(self, config):
+    def __init__(self, config:ProjectConfig):
         super().__init__()
 
-        self.hidden_dim = config['Model']['hidden_size']
-        self.latent_dim = config['Model']['latent_dim']
-        self.input_dim = config['Model']['input_dim']
-        self.num_layers = config['Model']['num_layers']
+        self.hidden_dim = config.model.hidden_size
+        self.latent_dim = config.model.latent_dim
+        self.input_dim = config.model.input_dim
+        self.num_layers = config.model.num_layers
         self.encoder = nn.ModuleDict({
             'layers': nn.ModuleList([Block(self.input_dim if i == 0 else self.hidden_dim, 
                                               self.hidden_dim) for i in range(self.num_layers)]),
