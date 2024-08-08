@@ -1,19 +1,20 @@
-# create a project manager class to initiazlize the project and load it from the config file
 import logging
 import os
 from pathlib import Path
-import yaml
 from datetime import datetime as dt
+from typing import Union
+import yaml
+from dataclasses import asdict, dataclass
 
-from utils.aux_func import create_config_template, read_config, write_config
+from utils.aux_func import ModelConfig, ProjectConfig, TrainingConfig
+
+
 
 class ProjectManager:
-    def __init__(self, p_name='project', working_dir=None, experimenter='experimenter'):
+    def __init__(self, config: ProjectConfig = ProjectConfig()):
         super().__init__()
 
-        self.working_dir = working_dir
-        self.experimenter = experimenter
-        self.p_name = p_name
+        self.config = config
         self.logger = logging.getLogger(__name__)
     
     def _initialize_project(self):
@@ -23,19 +24,19 @@ class ProjectManager:
         )
         date = dt.today().strftime('%Y-%m-%d')
 
-        if self.working_dir == None:
-            self.working_dir = '.'
+        if self.config.project_directory == ".":
+            self.config.project_directory = str(Path('.').resolve())
                 
-        work_dir = Path(self.working_dir).resolve()
-        project_name = "{pn}--{experimenter}--{date}".format(pn=self.p_name,  experimenter=self.experimenter, date=date)
+        work_dir = Path(self.config.project_directory).resolve()
+        project_name = f"{self.config.project_name}--{self.config.experimenter_name}--{date}"
         
-        #create a config file for the project and create directories for the project like deeplabcut
+        # Create directories for the project
         project_path = Path(os.path.join(work_dir, project_name))
         if project_path.exists():
-            print(f'project {project_path} already exists !')
-            self.logger.info(f'project {project_path} already exists !')
-            projconfigfile=os.path.join(str(project_path),'config.yaml')
-            return projconfigfile
+            print(f'project {project_path} already exists!')
+            self.logger.info(f'project {project_path} already exists!')
+            return project_path
+
         model_path = project_path / 'model'
         results_path = project_path / 'results'
         tb_logger = project_path / 'tensorboard'
@@ -44,48 +45,50 @@ class ProjectManager:
         
         for p in [model_path, results_path, tb_logger, best_model_path, plot_path]:
             p.mkdir(parents=True)
-            print (f'created{p} directory')
-            self.logger.info(f"created{p} directory")
+            print(f'created {p} directory')
+            self.logger.info(f"created {p} directory")
         
-        cfg_file,ruamelFile = create_config_template()
+        self.config.project_directory = str(project_path)
         
-        cfg_file['Project']['project_name'] = project_name
-        cfg_file['Project']['experimenter_name'] = self.experimenter
-        cfg_file['Project']['project_directory'] = str(project_path)
+        self.save_config()
         
-        
-        
-        self.logger.info(f"Initialized a project with config file: {cfg_file['Project']['config']}")
-        projconfigfile=os.path.join(str(project_path),'config.yaml')
-        write_config(projconfigfile,cfg_file)
-        return projconfigfile     
-    
-    def load_project(self, configname):
-        """
-        Load a project from a config file.
+        self.logger.info(f"Initialized a project with name: {project_name}")
+        return " "
 
-        Args:
-            configname (str): path to the config file
+    def save_config(self):
+        config_path = os.path.join(self.config.project_directory, 'config.yaml')
+        with open(config_path, 'w') as file:
+            yaml.dump(asdict(self.config), file)
+        self.logger.info(f"Configuration saved to {config_path}")
+    
+    def load_project(self, project_path: Union[str, Path]) -> ProjectConfig:
+        """
+        Load a project configuration from the existing project directory.
 
         Returns:
-            yaml: config file
+            ProjectConfig: Config dataclass instance
         """
-        try:
-            cfg = read_config(configname)
-        except TypeError:
-            cfg = {}
-        return cfg
+        config_path = os.path.join(project_path, 'config.yaml')
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as file:
+                config_dict = yaml.safe_load(file)
+                self.config = ProjectConfig(
+                    project_name=config_dict.get("project_name", "VAE_new"),
+                    experimenter_name=config_dict.get("experimenter_name", "Snawar"),
+                    project_directory=config_dict.get("project_directory", "./output"),
+                    model=ModelConfig(**config_dict.get("model", {})),
+                    training=TrainingConfig(**config_dict.get("training", {})),
+                )
+                self.logger.info(f"Loaded configuration from {config_path}")
+        else:
+            self.logger.warning(f"Configuration file not found at {config_path}, using default configuration")
+        return self.config      
     
-    @staticmethod
-    def cfg(name='config.yaml'):
+    def get_config(self) -> ProjectConfig:
         """
-        Get config file
+        Get the current configuration.
 
         Returns:
-            yaml: config file
+            ProjectConfig: Config dataclass instance
         """
-        try:
-            cfg = read_config(name)
-        except TypeError:
-            cfg = {}
-        return cfg
+        return self.config
