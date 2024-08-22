@@ -7,11 +7,12 @@
 # --------------------------------------------------------
 """
 import argparse
-from dataclasses import fields
+from dataclasses import asdict, fields
 import os
 import torch
 from torch.utils.data import DataLoader, random_split
 from models.basemodel import BaseModel
+from utils.aux_func import update_config_from_args
 from utils.trainer import Trainer
 from utils.project_manager import ProjectManager, ProjectConfig
 from dataloader.pinwheel import PinwheelDataset
@@ -20,22 +21,26 @@ torch.set_float32_matmul_precision('high')
 # Initialize the parser
 parser = argparse.ArgumentParser(description='Train a model')
 
-# Dynamically add command-line arguments based on the fields in ProjectConfig
-for field in fields(ProjectConfig):
-    field_type = field.type
-    if field_type == int:
-        parser.add_argument(f'--{field.name}', type=int, default=None, help=f'{field.name}')
-    elif field_type == float:
-        parser.add_argument(f'--{field.name}', type=float, default=None, help=f'{field.name}')
-    elif field_type == str:
-        parser.add_argument(f'--{field.name}', type=str, default=None, help=f'{field.name}')
+# Initialize ProjectConfig dataclass
+config = ProjectConfig()
 
+# Dynamically add command-line arguments based on the fields in ProjectConfig
+for k, v in asdict(config).items():
+    field_type = type(v)
+    if field_type == int:
+        parser.add_argument(f'--{k}', type=int, )
+    elif field_type == float:
+        parser.add_argument(f'--{k}', type=float, )
+    elif field_type == str:
+        parser.add_argument(f'--{k}', type=str, )
+    elif field_type == dict:
+        for key in v.keys():
+            parser.add_argument(f'--{key}', type=type(v[key]))
 # Parse the command-line arguments
 args = parser.parse_args()
 
-
-# Initialize ProjectConfig dataclass
-config = ProjectConfig()
+# Update the configuration with the command-line arguments
+config = update_config_from_args(config, args)
 
 # Initialize ProjectManager
 pm = ProjectManager(config=config)
