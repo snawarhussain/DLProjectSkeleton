@@ -22,7 +22,7 @@ class Trainer:
         self.train_loader = train_loader
         self.val_loader = val_loader
         self.optimizer = optimizer
-        if config.model.scheduler == 'StepLR':
+        if config.training.scheduler == 'StepLR':
             from torch.optim import lr_scheduler
             self.scheduler = lr_scheduler.StepLR(self.optimizer, step_size=150, gamma=0.5)  # Define your learning rate scheduler
         self.device = device
@@ -63,7 +63,7 @@ class Trainer:
                 self.accelerator.backward(loss)  # Use accelerator for backward pass
                 self.optimizer.step()  # Update the weights
 
-                if self.config.model.scheduler == 'StepLR':
+                if self.config.training.scheduler == 'StepLR':
                     self.scheduler.step()
                     lr = torch.tensor(self.scheduler.get_last_lr())
                     self.writer.add_scalar('Learning_rate', lr, epoch * len(self.train_loader) + i)

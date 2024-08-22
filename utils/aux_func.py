@@ -1,4 +1,5 @@
-from dataclasses import dataclass, field
+import argparse
+from dataclasses import dataclass, field, asdict
 import os
 @dataclass
 class ModelConfig:
@@ -13,8 +14,6 @@ class ModelConfig:
     latent_dim: int = 32
     decoder_type: str = "MLP"
     encoder_type: str = "MLP"
-    optimizer: str = "Adam"
-    scheduler: str = "StepLR"
 
 @dataclass
 class TrainingConfig:
@@ -32,3 +31,14 @@ class ProjectConfig:
     project_directory: str =  os.path.join(os.getcwd(), "output")
     model: ModelConfig = field(default_factory=ModelConfig)
     training: TrainingConfig = field(default_factory=TrainingConfig)
+
+
+def update_config_from_args(config: ProjectConfig, args: argparse.Namespace) -> ProjectConfig:
+    config_dict = asdict(config)
+    args_dict = vars(args)
+    
+    for key, value in args_dict.items():
+        if value is not None:
+            setattr(config, key, value)
+    
+    return config
