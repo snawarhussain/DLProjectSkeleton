@@ -34,7 +34,6 @@ class ProjectConfig:
 
 
 def update_config_from_args(config: ProjectConfig, args: argparse.Namespace) -> ProjectConfig:
-    config_dict = asdict(config)
     args_dict = vars(args)
     
     for key, value in args_dict.items():
