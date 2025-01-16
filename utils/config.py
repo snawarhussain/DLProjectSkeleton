@@ -29,6 +29,7 @@ class TrainingConfig:
 class ProjectConfig:
     project_name: str = "model_training"
     experimenter_name: str = "Bilbo Baggins"
-    project_directory: str =  os.path.join(os.getcwd(), "output")
+    project_directory: str =  os.getenv('PROJECT_DIR',
+                                     os.path.join(os.getcwd(), "project_runs"))
     model: ModelConfig = field(default_factory=ModelConfig)
     training: TrainingConfig = field(default_factory=TrainingConfig)

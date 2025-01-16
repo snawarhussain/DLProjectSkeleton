@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 import logging
-from utils.aux_func import ProjectConfig
+from utils.config import ProjectConfig
 # Initialize the logger
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"

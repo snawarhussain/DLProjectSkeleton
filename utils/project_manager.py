@@ -1,12 +1,13 @@
+from dataclasses import asdict
 import logging
 import os
 from pathlib import Path
 from datetime import datetime as dt
 from typing import Union
 import yaml
-from dataclasses import asdict, dataclass
 
-from utils.aux_func import ModelConfig, ProjectConfig, TrainingConfig
+from utils.config import ModelConfig, ProjectConfig, TrainingConfig
+from utils.logger import get_logger
 
 
 
@@ -16,6 +17,7 @@ class ProjectManager:
 
         self.config = config
         self.logger = logging.getLogger(__name__)
+        # self.logger = get_logger(config, __name__)
     
     def _initialize_project(self):
         # Initialize the logger
@@ -35,7 +37,7 @@ class ProjectManager:
         if project_path.exists():
             print(f'project {project_path} already exists!')
             self.logger.info(f'project {project_path} already exists!')
-            return project_path
+            return self.load_project(project_path)
 
         model_path = project_path / 'model'
         results_path = project_path / 'results'
@@ -53,7 +55,7 @@ class ProjectManager:
         self.save_config()
         
         self.logger.info(f"Initialized a project with name: {project_name}")
-        return " "
+        return self.config
 
     def save_config(self):
         config_path = os.path.join(self.config.project_directory, 'config.yaml')
@@ -73,7 +75,7 @@ class ProjectManager:
             with open(config_path, 'r') as file:
                 config_dict = yaml.safe_load(file)
                 self.config = ProjectConfig(
-                    project_name=config_dict.get("project_name", "VAE_new"),
+                    project_name=config_dict.get("project_name", "trained"),
                     experimenter_name=config_dict.get("experimenter_name", "Snawar"),
                     project_directory=config_dict.get("project_directory", "./output"),
                     model=ModelConfig(**config_dict.get("model", {})),
